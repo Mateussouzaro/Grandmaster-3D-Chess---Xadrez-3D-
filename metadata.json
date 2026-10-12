@@ -1,0 +1,6 @@
+{
+  "name": "Grandmaster 3D Chess - Xadrez 3D Realista",
+  "description": "Jogo de xadrez 3D realista com suporte a 2 jogadores no mesmo celular, rotação de câmera 360°, IA com múltiplos níveis, modo online com chat, tutoriais interativos, modo espectador, estatísticas detalhadas, conquistas e loja de cosméticos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
