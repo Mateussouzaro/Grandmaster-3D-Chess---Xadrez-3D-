@@ -59,6 +59,11 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
     const playersGroupRef = useRef<THREE.Group | null>(null);
     const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
     const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2());
+    const activeTurnRef = useRef(activeTurn);
+
+    useEffect(() => {
+      activeTurnRef.current = activeTurn;
+    }, [activeTurn]);
 
     // Camera orbit parameters
     const cameraAngleRef = useRef<{ theta: number; phi: number; radius: number }>({
@@ -220,6 +225,21 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
         camera.position.set(x, y, z);
         camera.lookAt(0, 0.3, 0);
 
+        // Os jogadores participam da jogada: o personagem da vez se inclina e movimenta os braços em direção ao tabuleiro.
+        const now = performance.now() * 0.003;
+        playersGroupRef.current?.children.forEach((player) => {
+          const isPlayerTurn = (player.userData.side === 'white' ? 'w' : 'b') === activeTurnRef.current;
+          const phase = Math.sin(now) * 0.06;
+          player.position.y = 0.1 + (isPlayerTurn ? Math.max(0, phase) : 0);
+          player.rotation.x = isPlayerTurn ? 0.08 + phase : 0;
+          player.children.forEach((part) => {
+            if (part.userData.role === 'arm') {
+              part.rotation.z = isPlayerTurn ? -0.28 + Math.sin(now * 1.8) * 0.1 : 0;
+              part.rotation.x = isPlayerTurn ? 0.18 : 0;
+            }
+          });
+        });
+
         renderer.render(scene, camera);
       };
       animate();
@@ -343,6 +363,8 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
         add(new THREE.SphereGeometry(0.45, 20, 12), darkOutfit, 0, 2.62, -0.02, 0.72);
         add(new THREE.CapsuleGeometry(0.13, 0.68, 8, 12), skin, 0.46, 1.52, -0.34);
         add(new THREE.CapsuleGeometry(0.13, 0.68, 8, 12), skin, 0.56, 1.42, -0.12);
+        group.children[3].userData.role = 'arm';
+        group.children[4].userData.role = 'arm';
         add(new THREE.CapsuleGeometry(0.18, 0.82, 8, 12), darkOutfit, -0.3, 0.47, 0.05);
         add(new THREE.CapsuleGeometry(0.18, 0.82, 8, 12), darkOutfit, 0.3, 0.47, 0.05);
         add(new THREE.BoxGeometry(0.9, 0.18, 0.9), darkOutfit, 0, 0.08, 0.25);
@@ -351,7 +373,11 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
         badge.position.set(0, 1.4, -0.61);
         badge.rotation.y = Math.PI;
         group.add(badge);
-        group.userData = { characterId: character.id, characterName: character.name };
+        group.userData = {
+          characterId: character.id,
+          characterName: character.name,
+          side,
+        };
         group.position.y = 0.1;
         group.add(new THREE.AmbientLight(character.color, 0.18));
         playersGroupRef.current?.add(group);
