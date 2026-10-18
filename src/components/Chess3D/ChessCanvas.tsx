@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Chess, Square } from 'chess.js';
 import { BoardTheme, PieceTheme } from '../../types/chess';
 import { getPieceGeometry } from './pieceGeometries';
+import { ChessCharacter } from '../../data/characters';
 
 interface ChessCanvasProps {
   chess: Chess;
@@ -17,6 +18,8 @@ interface ChessCanvasProps {
   lastMove: { from: string; to: string } | null;
   isCheck: boolean;
   checkedKingSquare: Square | null;
+  whiteCharacter: ChessCharacter;
+  blackCharacter: ChessCharacter;
 }
 
 export type CameraPreset = 'white' | 'black' | 'top' | 'iso';
@@ -41,6 +44,8 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
       lastMove,
       isCheck,
       checkedKingSquare,
+      whiteCharacter,
+      blackCharacter,
     },
     ref
   ) => {
@@ -51,6 +56,7 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
     const piecesGroupRef = useRef<THREE.Group | null>(null);
     const boardGroupRef = useRef<THREE.Group | null>(null);
     const markersGroupRef = useRef<THREE.Group | null>(null);
+    const playersGroupRef = useRef<THREE.Group | null>(null);
     const raycasterRef = useRef<THREE.Raycaster>(new THREE.Raycaster());
     const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2());
 
@@ -58,12 +64,12 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
     const cameraAngleRef = useRef<{ theta: number; phi: number; radius: number }>({
       theta: playerOrientation === 'w' ? 0 : Math.PI,
       phi: Math.PI / 4, // 45 degrees elevation
-      radius: 11.5,
+      radius: 14.5,
     });
     const targetCameraAngleRef = useRef<{ theta: number; phi: number; radius: number }>({
       theta: playerOrientation === 'w' ? 0 : Math.PI,
       phi: Math.PI / 4,
-      radius: 11.5,
+      radius: 14.5,
     });
 
     const isDraggingRef = useRef(false);
@@ -96,11 +102,11 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
         if (preset === 'white') {
           targetCameraAngleRef.current.theta = 0;
           targetCameraAngleRef.current.phi = Math.PI / 4.2;
-          targetCameraAngleRef.current.radius = 11.5;
+          targetCameraAngleRef.current.radius = 14.5;
         } else if (preset === 'black') {
           targetCameraAngleRef.current.theta = Math.PI;
           targetCameraAngleRef.current.phi = Math.PI / 4.2;
-          targetCameraAngleRef.current.radius = 11.5;
+          targetCameraAngleRef.current.radius = 14.5;
         } else if (preset === 'top') {
           targetCameraAngleRef.current.phi = 0.05; // almost 90 deg down
           targetCameraAngleRef.current.radius = 10.0;
@@ -187,6 +193,10 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
       const markersGroup = new THREE.Group();
       scene.add(markersGroup);
       markersGroupRef.current = markersGroup;
+
+      const playersGroup = new THREE.Group();
+      scene.add(playersGroup);
+      playersGroupRef.current = playersGroup;
 
       // Animation loop
       let animationFrameId: number;
@@ -298,6 +308,58 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
         }
       }
     }, [boardTheme]);
+
+    // Rebuild the two seated players around the board.
+    useEffect(() => {
+      const group = playersGroupRef.current;
+      if (!group) return;
+      group.clear();
+
+      const addPlayer = (character: ChessCharacter, side: 'white' | 'black') => {
+        const isWhite = side === 'white';
+        const x = isWhite ? -4.0 : 4.0;
+        const z = 0;
+        const rotation = isWhite ? Math.PI / 2 : -Math.PI / 2;
+        const color = new THREE.Color(character.color);
+        const darkColor = color.clone().multiplyScalar(0.45);
+        const skin = new THREE.MeshStandardMaterial({ color: 0xc98f70, roughness: 0.8 });
+        const outfit = new THREE.MeshStandardMaterial({ color, roughness: 0.62 });
+        const darkOutfit = new THREE.MeshStandardMaterial({ color: darkColor, roughness: 0.7 });
+        const group = new THREE.Group();
+        group.position.set(x, 0, z);
+        group.rotation.y = rotation;
+
+        const add = (geometry: THREE.BufferGeometry, material: THREE.Material, px: number, py: number, pz: number, scale = 1) => {
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(px, py, pz);
+          mesh.scale.setScalar(scale);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          group.add(mesh);
+        };
+
+        add(new THREE.CylinderGeometry(0.58, 0.72, 1.25, 20), outfit, 0, 1.35, 0);
+        add(new THREE.SphereGeometry(0.43, 20, 16), skin, 0, 2.32, 0);
+        add(new THREE.SphereGeometry(0.45, 20, 12), darkOutfit, 0, 2.62, -0.02, 0.72);
+        add(new THREE.CapsuleGeometry(0.13, 0.68, 8, 12), skin, 0.46, 1.52, -0.34);
+        add(new THREE.CapsuleGeometry(0.13, 0.68, 8, 12), skin, 0.56, 1.42, -0.12);
+        add(new THREE.CapsuleGeometry(0.18, 0.82, 8, 12), darkOutfit, -0.3, 0.47, 0.05);
+        add(new THREE.CapsuleGeometry(0.18, 0.82, 8, 12), darkOutfit, 0.3, 0.47, 0.05);
+        add(new THREE.BoxGeometry(0.9, 0.18, 0.9), darkOutfit, 0, 0.08, 0.25);
+
+        const badge = new THREE.Mesh(new THREE.CircleGeometry(0.22, 20), new THREE.MeshBasicMaterial({ color }));
+        badge.position.set(0, 1.4, -0.61);
+        badge.rotation.y = Math.PI;
+        group.add(badge);
+        group.userData = { characterId: character.id, characterName: character.name };
+        group.position.y = 0.1;
+        group.add(new THREE.AmbientLight(character.color, 0.18));
+        playersGroupRef.current?.add(group);
+      };
+
+      addPlayer(whiteCharacter, 'white');
+      addPlayer(blackCharacter, 'black');
+    }, [whiteCharacter, blackCharacter]);
 
     // Rebuild Pieces when board position (chess FEN) or pieceTheme changes
     useEffect(() => {

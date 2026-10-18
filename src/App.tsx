@@ -726,6 +726,8 @@ export default function App() {
           lastMove={lastMove}
           isCheck={chess.inCheck()}
           checkedKingSquare={getCheckedKingSquare()}
+          whiteCharacter={selectedCharacter}
+          blackCharacter={opponentCharacter}
         />
 
         {/* Tactical HUD Overlay (Clocks, Turn Indicator, Camera tools, HUD buttons) */}
