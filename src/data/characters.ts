@@ -9,8 +9,8 @@ export interface ChessCharacter {
 }
 
 export const CHESS_CHARACTERS: ChessCharacter[] = [
-  { id: 'lionel', name: 'Lionel', role: 'O Visionário', specialty: 'Leitura de diagonais', bonus: '+10% de precisão em bispos', color: '#38bdf8', initials: 'L' },
-  { id: 'cristiano', name: 'Cristiano', role: 'O Incansável', specialty: 'Pressão constante', bonus: '+10% de energia após capturas', color: '#22c55e', initials: 'C' },
+  { id: 'lionel', name: 'El Mago', role: 'O Visionário', specialty: 'Leitura de diagonais', bonus: '+10% de precisão em bispos', color: '#38bdf8', initials: 'L' },
+  { id: 'cristiano', name: 'El bicho', role: 'O Incansável', specialty: 'Pressão constante', bonus: '+10% de energia após capturas', color: '#22c55e', initials: 'C' },
   { id: 'magnus', name: 'Magnus', role: 'O Calculista', specialty: 'Finais complexos', bonus: '+12% de avaliação em finais', color: '#a78bfa', initials: 'M' },
   { id: 'judit', name: 'Judit', role: 'A Tática', specialty: 'Ataques surpresa', bonus: '+8% de força em garfos', color: '#f472b6', initials: 'J' },
   { id: 'bobby', name: 'Bobby', role: 'O Clássico', specialty: 'Desenvolvimento rápido', bonus: '+1 defesa no início da partida', color: '#f59e0b', initials: 'B' },
