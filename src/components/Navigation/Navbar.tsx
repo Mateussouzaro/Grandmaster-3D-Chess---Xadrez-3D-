@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Bot, Globe, BookOpen, Eye, ShoppingBag, Trophy, User, Award, Settings } from 'lucide-react';
+import { Users, Bot, Globe, BookOpen, Eye, ShoppingBag, Trophy, Award, Maximize2, Minimize2 } from 'lucide-react';
 import { GameMode } from '../../types/chess';
 
 interface NavbarProps {
@@ -11,6 +11,8 @@ interface NavbarProps {
   onOpenLeaderboard: () => void;
   onOpenProfile: () => void;
   onOpenAchievements: () => void;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -22,6 +24,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLeaderboard,
   onOpenProfile,
   onOpenAchievements,
+  isFullscreen,
+  onToggleFullscreen,
 }) => {
   return (
     <header className="relative w-full bg-stone-950/90 backdrop-blur-xl border-b border-amber-500/10 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 z-20 shadow-[0_8px_30px_rgba(0,0,0,0.22)]">
@@ -137,6 +141,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           title="Conquistas"
         >
           <Award className="w-4 h-4 text-amber-400" />
+        </button>
+
+        {/* Fullscreen Button */}
+        <button
+          onClick={onToggleFullscreen}
+          className="p-2 rounded-xl bg-stone-900 hover:bg-stone-800 border border-white/10 text-stone-300 hover:text-white transition-all active:scale-95"
+          title={isFullscreen ? 'Sair da tela cheia' : 'Jogar em tela cheia horizontal'}
+          aria-label={isFullscreen ? 'Sair da tela cheia' : 'Jogar em tela cheia horizontal'}
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4 text-amber-400" /> : <Maximize2 className="w-4 h-4 text-amber-400" />}
         </button>
 
         {/* Profile Avatar Button */}

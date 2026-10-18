@@ -52,6 +52,7 @@ export default function App() {
   // Settings & HUD
   const [autoRotate, setAutoRotate] = useState<boolean>(true); // Auto 180° flip for Pass & Play!
   const [isMuted, setIsMuted] = useState<boolean>(soundManager.getMuted());
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
 
   // AI settings
@@ -156,6 +157,30 @@ export default function App() {
 
     return () => clearInterval(timer);
   }, [chess, isGameOver, timeControl, activeTutorialLesson]);
+
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      await document.documentElement.requestFullscreen();
+      try {
+        await screen.orientation?.lock('landscape');
+      } catch {
+        // Orientation lock is unavailable in some mobile browsers.
+      }
+    } catch {
+      setIsFullscreen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // Handle Game Over
   const handleGameOver = useCallback((reason: GameStats['reason'], forcedWinner?: PieceColor | 'draw') => {
@@ -567,8 +592,10 @@ export default function App() {
         onOpenShop={() => setShowShopModal(true)}
         onOpenLeaderboard={() => setShowLeaderboardModal(true)}
         onOpenProfile={() => setShowProfileModal(true)}
-        onOpenAchievements={() => setShowAchievementsModal(true)}
-      />
+  onOpenAchievements={() => setShowAchievementsModal(true)}
+  isFullscreen={isFullscreen}
+  onToggleFullscreen={toggleFullscreen}
+  />
 
       {/* Sub-Header: Mode contextual info & quick settings */}
       <div className="bg-stone-950/60 backdrop-blur-md border-b border-white/5 px-3 py-1.5 flex items-center justify-between text-xs z-10">
