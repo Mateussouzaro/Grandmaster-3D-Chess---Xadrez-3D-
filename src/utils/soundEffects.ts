@@ -7,6 +7,8 @@ class ChessAudioEngine {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
   private volume: number = 0.8;
+  private musicTimer: number | null = null;
+  private musicGain: GainNode | null = null;
 
   constructor() {
     // AudioContext will be initialized on first user interaction
@@ -39,6 +41,55 @@ class ChessAudioEngine {
 
   public setVolume(vol: number) {
     this.volume = Math.max(0, Math.min(1, vol));
+  }
+
+  public startBackgroundMusic() {
+    if (this.isMuted || this.musicTimer !== null) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const ctx = this.ctx;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(this.volume * 0.045, ctx.currentTime + 1.2);
+    gain.connect(ctx.destination);
+    this.musicGain = gain;
+
+    const notes = [110, 130.81, 164.81, 196, 164.81, 130.81];
+    let index = 0;
+    const playNote = () => {
+      if (!this.ctx || !this.musicGain) return;
+      const now = this.ctx.currentTime;
+      const oscillator = this.ctx.createOscillator();
+      const noteGain = this.ctx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(notes[index % notes.length], now);
+      noteGain.gain.setValueAtTime(0.0001, now);
+      noteGain.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+      oscillator.connect(noteGain);
+      noteGain.connect(this.musicGain);
+      oscillator.start(now);
+      oscillator.stop(now + 2.3);
+      index += 1;
+    };
+
+    playNote();
+    this.musicTimer = window.setInterval(playNote, 900);
+  }
+
+  public stopBackgroundMusic() {
+    if (this.musicTimer !== null) {
+      window.clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
+    if (this.musicGain && this.ctx) {
+      const gain = this.musicGain;
+      gain.gain.cancelScheduledValues(this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.35);
+      window.setTimeout(() => gain.disconnect(), 400);
+      this.musicGain = null;
+    }
   }
 
   // Realistic wooden piece placing sound (warm low-pass thump with slight click)

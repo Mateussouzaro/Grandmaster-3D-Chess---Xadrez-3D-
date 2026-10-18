@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Instagram, LoaderCircle } from 'lucide-react';
+import { Instagram, LoaderCircle, Music2, Upload } from 'lucide-react';
 import { Chess, Square } from 'chess.js';
 import {
   GameMode,
@@ -57,6 +57,8 @@ export default function App() {
   const [isMuted, setIsMuted] = useState<boolean>(soundManager.getMuted());
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [customMusicName, setCustomMusicName] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
 
   // AI settings
@@ -107,6 +109,7 @@ export default function App() {
 
   // 3D Canvas Ref
   const canvasRef = useRef<ChessCanvasRef>(null);
+  const customAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Save profile & achievements to localStorage
   useEffect(() => {
@@ -186,6 +189,49 @@ export default function App() {
   useEffect(() => {
     const loadingTimer = window.setTimeout(() => setIsLoading(false), 2200);
     return () => window.clearTimeout(loadingTimer);
+  }, []);
+
+  const toggleBackgroundMusic = useCallback(() => {
+    if (customAudioRef.current) {
+      if (customAudioRef.current.paused) {
+        customAudioRef.current.play().catch(() => {});
+        setIsMusicPlaying(true);
+      } else {
+        customAudioRef.current.pause();
+        setIsMusicPlaying(false);
+      }
+      return;
+    }
+
+    if (isMusicPlaying) {
+      soundManager.stopBackgroundMusic();
+      setIsMusicPlaying(false);
+    } else {
+      soundManager.startBackgroundMusic();
+      setIsMusicPlaying(true);
+    }
+  }, [isMusicPlaying]);
+
+  const handleCustomMusic = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith('audio/')) return;
+    soundManager.stopBackgroundMusic();
+    customAudioRef.current?.pause();
+    const audio = new Audio(URL.createObjectURL(file));
+    audio.loop = true;
+    audio.volume = 0.32;
+    audio.play().catch(() => {});
+    customAudioRef.current = audio;
+    setCustomMusicName(file.name);
+    setIsMusicPlaying(true);
+  }, []);
+
+  useEffect(() => () => {
+    soundManager.stopBackgroundMusic();
+    if (customAudioRef.current) {
+      customAudioRef.current.pause();
+      URL.revokeObjectURL(customAudioRef.current.src);
+    }
   }, []);
 
   useEffect(() => {
@@ -741,6 +787,20 @@ export default function App() {
             <span className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-stone-950" style={{ backgroundColor: selectedCharacter.color }}>{selectedCharacter.initials}</span>
             <span className="hidden sm:inline">{selectedCharacter.name}</span>
           </button>
+          <button
+            onClick={toggleBackgroundMusic}
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all ${isMusicPlaying ? 'border-amber-400/50 bg-amber-400/15 text-amber-200' : 'border-stone-800 bg-stone-900 text-stone-300 hover:bg-stone-800 hover:text-white'}`}
+            title={isMusicPlaying ? 'Pausar música' : 'Tocar música ambiente'}
+          >
+            <Music2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{isMusicPlaying ? 'Pausar música' : 'Música'}</span>
+          </button>
+          <label className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-800 bg-stone-900 px-2.5 py-1 text-[11px] font-semibold text-stone-300 transition-all hover:bg-stone-800 hover:text-white" title="Usar sua própria música">
+            <Upload className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Minha música</span>
+            <input type="file" accept="audio/*" className="sr-only" onChange={handleCustomMusic} />
+          </label>
+          {customMusicName && <span className="hidden max-w-28 truncate text-[10px] text-amber-300/80 lg:inline" title={customMusicName}>{customMusicName}</span>}
           <button
             onClick={() => resetGame()}
             className="rounded-lg border border-stone-800 bg-stone-900 px-2.5 py-1 text-[11px] font-semibold text-stone-300 transition-all hover:bg-stone-800 hover:text-white"
