@@ -7,6 +7,8 @@ class ChessAudioEngine {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
   private volume: number = 0.8;
+  private musicTimer: number | null = null;
+  private musicGain: GainNode | null = null;
 
   constructor() {
     // AudioContext will be initialized on first user interaction
@@ -39,6 +41,58 @@ class ChessAudioEngine {
 
   public setVolume(vol: number) {
     this.volume = Math.max(0, Math.min(1, vol));
+  }
+
+  public startBackgroundMusic() {
+    if (this.isMuted || this.musicTimer !== null) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const ctx = this.ctx;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(this.volume * 0.045, ctx.currentTime + 1.2);
+    gain.connect(ctx.destination);
+    this.musicGain = gain;
+
+    // Arpejo calmo em ré menor, inspirado no clima contemplativo de uma sala de xadrez.
+    // Notas mais espaçadas e um timbre suave deixam a trilha presente sem competir com a partida.
+    const notes = [146.83, 174.61, 220, 261.63, 220, 174.61, 164.81, 220];
+    let index = 0;
+    const playNote = () => {
+      if (!this.ctx || !this.musicGain) return;
+      const now = this.ctx.currentTime;
+      const oscillator = this.ctx.createOscillator();
+      const noteGain = this.ctx.createGain();
+      const duration = 2.8;
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(notes[index % notes.length], now);
+      noteGain.gain.setValueAtTime(0.0001, now);
+      noteGain.gain.exponentialRampToValueAtTime(0.075, now + 0.18);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      oscillator.connect(noteGain);
+      noteGain.connect(this.musicGain);
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.05);
+      index += 1;
+    };
+
+    playNote();
+    this.musicTimer = window.setInterval(playNote, 1400);
+  }
+
+  public stopBackgroundMusic() {
+    if (this.musicTimer !== null) {
+      window.clearInterval(this.musicTimer);
+      this.musicTimer = null;
+    }
+    if (this.musicGain && this.ctx) {
+      const gain = this.musicGain;
+      gain.gain.cancelScheduledValues(this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.35);
+      window.setTimeout(() => gain.disconnect(), 400);
+      this.musicGain = null;
+    }
   }
 
   // Realistic wooden piece placing sound (warm low-pass thump with slight click)
@@ -197,7 +251,7 @@ class ChessAudioEngine {
     } catch {}
   }
 
-  // Soft UI click
+  // Soft UI click with a warm two-note confirmation tone
   public playClick() {
     if (this.isMuted) return;
     this.initContext();
@@ -205,20 +259,32 @@ class ChessAudioEngine {
 
     try {
       const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, now);
-      osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+      const master = this.ctx.createGain();
+      master.gain.setValueAtTime(this.volume * 0.22, now);
+      master.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      master.connect(this.ctx.destination);
 
-      gain.gain.setValueAtTime(0.15 * this.volume, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.05);
+      [740, 988].forEach((frequency, index) => {
+        if (!this.ctx) return;
+        const start = now + index * 0.035;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.exponentialRampToValueAtTime(0.6, start + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.09);
+        osc.connect(gain);
+        gain.connect(master);
+        osc.start(start);
+        osc.stop(start + 0.1);
+      });
     } catch {}
+  }
+
+  // Shorter feedback for menu controls, kept separate from chess-piece sounds.
+  public playOption() {
+    this.playClick();
   }
 }
 
