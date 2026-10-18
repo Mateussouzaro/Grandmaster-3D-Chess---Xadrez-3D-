@@ -26,6 +26,8 @@ import { CosmeticsModal } from './components/CosmeticsShop/CosmeticsModal';
 import { ProfileModal } from './components/ProfileCustomizer/ProfileModal';
 import { LeaderboardModal } from './components/Leaderboard/LeaderboardModal';
 import { AchievementsModal } from './components/Achievements/AchievementsModal';
+import { CharacterSelectModal } from './components/Characters/CharacterSelectModal';
+import { CHESS_CHARACTERS, ChessCharacter } from './data/characters';
 import { Navbar } from './components/Navigation/Navbar';
 import { soundManager } from './utils/soundEffects';
 import { getAIMove, getEvaluationInPawns, calculateMatchAccuracies } from './utils/aiEngine';
@@ -94,6 +96,9 @@ export default function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLeaderboardModal, setShowLeaderboardModal] = useState(false);
   const [showAchievementsModal, setShowAchievementsModal] = useState(false);
+  const [showCharacterModal, setShowCharacterModal] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState<ChessCharacter>(CHESS_CHARACTERS[1]);
+  const opponentCharacter = CHESS_CHARACTERS[0];
 
   // Post Game Stats
   const [postGameStats, setPostGameStats] = useState<GameStats | null>(null);
@@ -686,13 +691,22 @@ export default function App() {
           )}
         </div>
 
-        {/* Quick Restart Game button */}
-        <button
-          onClick={() => resetGame()}
-          className="px-2.5 py-1 rounded-lg bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white text-[11px] font-semibold transition-all border border-stone-800 shrink-0"
-        >
-          Reiniciar Jogo
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowCharacterModal(true)}
+            className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-300 transition hover:bg-amber-500/20"
+            title="Escolher personagem"
+          >
+            <span className="flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-stone-950" style={{ backgroundColor: selectedCharacter.color }}>{selectedCharacter.initials}</span>
+            <span className="hidden sm:inline">{selectedCharacter.name}</span>
+          </button>
+          <button
+            onClick={() => resetGame()}
+            className="rounded-lg border border-stone-800 bg-stone-900 px-2.5 py-1 text-[11px] font-semibold text-stone-300 transition-all hover:bg-stone-800 hover:text-white"
+          >
+            Reiniciar Jogo
+          </button>
+        </div>
       </div>
 
       {/* Main 3D Interactive Stage */}
@@ -716,8 +730,8 @@ export default function App() {
 
         {/* Tactical HUD Overlay (Clocks, Turn Indicator, Camera tools, HUD buttons) */}
         <GameHUD
-          playerWhite={{ name: myPlayerName, title: profile.title, avatar: profile.avatarId, elo: profile.elo }}
-          playerBlack={{ name: opponentName, title: gameMode === 'vs_ai' ? 'BOT' : 'GM', avatar: 'avatar_speed', elo: 1300 }}
+          playerWhite={{ name: `${selectedCharacter.name} · ${myPlayerName}`, title: selectedCharacter.role, avatar: profile.avatarId, elo: profile.elo }}
+          playerBlack={{ name: `${opponentCharacter.name} · ${opponentName}`, title: opponentCharacter.role, avatar: 'avatar_speed', elo: 1300 }}
           activeTurn={chess.turn()}
           whiteTime={whiteTime}
           blackTime={blackTime}
@@ -743,6 +757,13 @@ export default function App() {
           canUndo={gameMode !== 'online'}
         />
       </main>
+
+      <CharacterSelectModal
+        isOpen={showCharacterModal}
+        selectedId={selectedCharacter.id}
+        onSelect={(character) => setSelectedCharacter(character)}
+        onClose={() => setShowCharacterModal(false)}
+      />
 
       {/* Move History / Notation Modal */}
       <MoveHistoryModal
