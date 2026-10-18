@@ -55,27 +55,30 @@ class ChessAudioEngine {
     gain.connect(ctx.destination);
     this.musicGain = gain;
 
-    const notes = [110, 130.81, 164.81, 196, 164.81, 130.81];
+    // Arpejo calmo em ré menor, inspirado no clima contemplativo de uma sala de xadrez.
+    // Notas mais espaçadas e um timbre suave deixam a trilha presente sem competir com a partida.
+    const notes = [146.83, 174.61, 220, 261.63, 220, 174.61, 164.81, 220];
     let index = 0;
     const playNote = () => {
       if (!this.ctx || !this.musicGain) return;
       const now = this.ctx.currentTime;
       const oscillator = this.ctx.createOscillator();
       const noteGain = this.ctx.createGain();
-      oscillator.type = 'sine';
+      const duration = 2.8;
+      oscillator.type = 'triangle';
       oscillator.frequency.setValueAtTime(notes[index % notes.length], now);
       noteGain.gain.setValueAtTime(0.0001, now);
-      noteGain.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
-      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+      noteGain.gain.exponentialRampToValueAtTime(0.075, now + 0.18);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
       oscillator.connect(noteGain);
       noteGain.connect(this.musicGain);
       oscillator.start(now);
-      oscillator.stop(now + 2.3);
+      oscillator.stop(now + duration + 0.05);
       index += 1;
     };
 
     playNote();
-    this.musicTimer = window.setInterval(playNote, 900);
+    this.musicTimer = window.setInterval(playNote, 1400);
   }
 
   public stopBackgroundMusic() {
