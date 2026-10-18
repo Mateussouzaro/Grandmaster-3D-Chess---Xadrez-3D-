@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Instagram, LoaderCircle } from 'lucide-react';
 import { Chess, Square } from 'chess.js';
 import {
   GameMode,
@@ -55,6 +56,7 @@ export default function App() {
   const [autoRotate, setAutoRotate] = useState<boolean>(true); // Auto 180° flip for Pass & Play!
   const [isMuted, setIsMuted] = useState<boolean>(soundManager.getMuted());
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
 
   // AI settings
@@ -179,6 +181,11 @@ export default function App() {
     } catch {
       setIsFullscreen(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const loadingTimer = window.setTimeout(() => setIsLoading(false), 2200);
+    return () => window.clearTimeout(loadingTimer);
   }, []);
 
   useEffect(() => {
@@ -576,6 +583,27 @@ export default function App() {
 
   return (
     <div className={`relative w-screen h-screen flex flex-col bg-gradient-to-b ${currentBoardTheme.backgroundStyle} text-white overflow-hidden select-none`}>
+      {isLoading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#090807] px-6 text-center">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(245,158,11,0.18),transparent_32rem)]" aria-hidden="true" />
+          <div className="relative flex max-w-sm flex-col items-center">
+            <div className="mb-7 flex h-20 w-20 items-center justify-center rounded-3xl border border-amber-400/30 bg-amber-400/10 shadow-[0_0_55px_rgba(245,158,11,0.18)]">
+              <span className="text-5xl text-amber-300" aria-hidden="true">♞</span>
+            </div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.35em] text-amber-400">Grandmaster 3D Chess</p>
+            <h1 className="text-3xl font-black tracking-tight text-white">Carregando o jogo</h1>
+            <div className="mt-6 flex items-center gap-2 text-sm text-stone-400">
+              <LoaderCircle className="h-4 w-4 animate-spin text-amber-400" aria-hidden="true" />
+              <span>Preparando o tabuleiro...</span>
+            </div>
+            <p className="mt-10 text-sm text-stone-300">Jogo desenvolvido pelo <strong className="text-amber-300">MATEUS</strong></p>
+            <a className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-stone-200 transition-colors hover:border-pink-400/40 hover:text-white" href="https://www.instagram.com/grandmasterxadrez3d" target="_blank" rel="noreferrer">
+              <Instagram className="h-4 w-4 text-pink-400" aria-hidden="true" />
+              <span>Segue lá no Insta: <strong className="text-white">@grandmasterxadrez3d</strong></span>
+            </a>
+          </div>
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:48px_48px]" aria-hidden="true" />
       {/* Top Main Navigation */}
       <Navbar
