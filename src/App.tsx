@@ -545,7 +545,8 @@ export default function App() {
       : profile.name;
 
   return (
-    <div className={`w-screen h-screen flex flex-col bg-gradient-to-b ${currentBoardTheme.backgroundStyle} text-white overflow-hidden select-none`}>
+    <div className={`relative w-screen h-screen flex flex-col bg-gradient-to-b ${currentBoardTheme.backgroundStyle} text-white overflow-hidden select-none`}>
+      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:48px_48px]" aria-hidden="true" />
       {/* Top Main Navigation */}
       <Navbar
         currentMode={gameMode}

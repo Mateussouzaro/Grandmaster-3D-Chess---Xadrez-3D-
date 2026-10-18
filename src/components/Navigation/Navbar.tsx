@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAchievements,
 }) => {
   return (
-    <header className="w-full bg-stone-950/90 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 z-20">
+    <header className="relative w-full bg-stone-950/90 backdrop-blur-xl border-b border-amber-500/10 px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3 z-20 shadow-[0_8px_30px_rgba(0,0,0,0.22)]">
       {/* Brand Logo & Title */}
       <div className="flex items-center gap-2.5">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/20 text-stone-950 font-black text-lg">
