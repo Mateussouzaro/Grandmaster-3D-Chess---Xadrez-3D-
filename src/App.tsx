@@ -584,9 +584,10 @@ export default function App() {
   return (
     <div className={`relative w-screen h-screen flex flex-col bg-gradient-to-b ${currentBoardTheme.backgroundStyle} text-white overflow-hidden select-none`}>
       {isLoading && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#090807] px-6 text-center">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(245,158,11,0.18),transparent_32rem)]" aria-hidden="true" />
-          <div className="relative flex max-w-sm flex-col items-center">
+<div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#090807] bg-cover bg-center px-6 text-center" style={{ backgroundImage: "url('/loading-chess-bg.png')" }}>
+  <div className="pointer-events-none absolute inset-0 bg-[#05070b]/65" aria-hidden="true" />
+  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(245,158,11,0.18),transparent_34rem)]" aria-hidden="true" />
+  <div className="relative flex max-w-sm flex-col items-center">
             <div className="mb-7 flex h-20 w-20 items-center justify-center rounded-3xl border border-amber-400/30 bg-amber-400/10 shadow-[0_0_55px_rgba(245,158,11,0.18)]">
               <span className="text-5xl text-amber-300" aria-hidden="true">♞</span>
             </div>
