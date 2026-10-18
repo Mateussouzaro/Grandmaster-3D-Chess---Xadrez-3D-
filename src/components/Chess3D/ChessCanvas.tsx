@@ -58,12 +58,12 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
     const cameraAngleRef = useRef<{ theta: number; phi: number; radius: number }>({
       theta: playerOrientation === 'w' ? 0 : Math.PI,
       phi: Math.PI / 4, // 45 degrees elevation
-      radius: 11.5,
+      radius: 14.5,
     });
     const targetCameraAngleRef = useRef<{ theta: number; phi: number; radius: number }>({
       theta: playerOrientation === 'w' ? 0 : Math.PI,
       phi: Math.PI / 4,
-      radius: 11.5,
+      radius: 14.5,
     });
 
     const isDraggingRef = useRef(false);
@@ -96,11 +96,11 @@ export const ChessCanvas = React.forwardRef<ChessCanvasRef, ChessCanvasProps>(
         if (preset === 'white') {
           targetCameraAngleRef.current.theta = 0;
           targetCameraAngleRef.current.phi = Math.PI / 4.2;
-          targetCameraAngleRef.current.radius = 11.5;
+          targetCameraAngleRef.current.radius = 14.5;
         } else if (preset === 'black') {
           targetCameraAngleRef.current.theta = Math.PI;
           targetCameraAngleRef.current.phi = Math.PI / 4.2;
-          targetCameraAngleRef.current.radius = 11.5;
+          targetCameraAngleRef.current.radius = 14.5;
         } else if (preset === 'top') {
           targetCameraAngleRef.current.phi = 0.05; // almost 90 deg down
           targetCameraAngleRef.current.radius = 10.0;
