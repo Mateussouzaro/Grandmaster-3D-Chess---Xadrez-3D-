@@ -197,7 +197,7 @@ class ChessAudioEngine {
     } catch {}
   }
 
-  // Soft UI click
+  // Soft UI click with a warm two-note confirmation tone
   public playClick() {
     if (this.isMuted) return;
     this.initContext();
@@ -205,20 +205,32 @@ class ChessAudioEngine {
 
     try {
       const now = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, now);
-      osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+      const master = this.ctx.createGain();
+      master.gain.setValueAtTime(this.volume * 0.22, now);
+      master.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      master.connect(this.ctx.destination);
 
-      gain.gain.setValueAtTime(0.15 * this.volume, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.05);
+      [740, 988].forEach((frequency, index) => {
+        if (!this.ctx) return;
+        const start = now + index * 0.035;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.exponentialRampToValueAtTime(0.6, start + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.09);
+        osc.connect(gain);
+        gain.connect(master);
+        osc.start(start);
+        osc.stop(start + 0.1);
+      });
     } catch {}
+  }
+
+  // Shorter feedback for menu controls, kept separate from chess-piece sounds.
+  public playOption() {
+    this.playClick();
   }
 }
 

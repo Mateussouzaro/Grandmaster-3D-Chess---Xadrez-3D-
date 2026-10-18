@@ -194,6 +194,18 @@ export default function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // Give every menu control a subtle audio response without affecting board gestures.
+  useEffect(() => {
+    const handleOptionClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest('button, [role="button"], select, input[type="checkbox"], input[type="radio"]')) {
+        soundManager.playOption();
+      }
+    };
+    document.addEventListener('click', handleOptionClick);
+    return () => document.removeEventListener('click', handleOptionClick);
+  }, []);
+
   // Handle Game Over
   const handleGameOver = useCallback((reason: GameStats['reason'], forcedWinner?: PieceColor | 'draw') => {
     setIsGameOver(true);
